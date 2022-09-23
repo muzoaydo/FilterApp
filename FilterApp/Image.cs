@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FilterApp
 {
-    public class MyImage
+    public class Image
     {
         const String defaultImgPath = "a.raw";
 
@@ -18,9 +18,10 @@ namespace FilterApp
         public int YInc { get; set; }
         public int MaskWidth { get; set; }
         public int MaskHeight { get; set; }
+        public int[,] ?FilteredArr { get; set; }
 
 
-        public int[,] ReadFileToArr(String? ImgPath, int XRes, int YRes, int XInc, int YInc, int MaskWidth, int MaskHeight)
+        public Image(String? ImgPath, int XRes, int YRes, int XInc, int YInc, int MaskWidth, int MaskHeight)
         {
             this.XRes = XRes;
             this.YRes = YRes;
@@ -35,22 +36,19 @@ namespace FilterApp
             {
                 this.ImgPath = defaultImgPath;
                 MessageBox.Show("Image Path is set to \"./a.raw\" as default.");
-
             }
-            else if(XInc == 0 || YInc == 0)
+            else if (XInc < 0 || YInc < 0)
             {
                 MessageBox.Show("Incrementation numbers can't be 0.");
-                return null;
             }
-            else if(XRes == 0 || YRes == 0)
+            else if (XRes < 0 || YRes < 0)
             {
                 MessageBox.Show("Resolution can't be 0.");
-                return null;
             }
+                Arr = new int[XRes, YRes];
+                FilteredArr = new int[XRes, YRes];
             try
             {
-                Arr = new int[XRes, YRes];
-
                 FileStream Img = File.OpenRead(ImgPath);
                 for (int j = 0; j < this.YRes; j++)
                 {
@@ -59,31 +57,24 @@ namespace FilterApp
                         Arr[i, j] = Img.ReadByte();
                     }
                 }
-                return this.Arr;
+                Arr = FilteredArr;
             }
             catch (Exception ex)
             {
                 if (ex is FileNotFoundException)
                 {
                     MessageBox.Show("File could not found.");
-                    return null;
                 }
                 else
                 {
                     MessageBox.Show(ex.Message);
-                    return null;
                 }
-
             }
-
-
-
         }
 
         public int[,] Mask(int width, int height, int xCoord, int yCoord)
         {
             int[,] mask = new int[width, height];
-
 
             for (int y = yCoord; y < yCoord + height && y < YRes; y++)
             {

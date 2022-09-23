@@ -9,7 +9,7 @@ namespace FilterApp
 {
     public class Filters
     {
-        public static int[,] MedianFilter(MyImage Img)
+        public static int[,] MedianFilter(Image Img, int repeatNum)
         {
             int xInc = Img.XInc;
             int yInc = Img.YInc;
@@ -18,23 +18,28 @@ namespace FilterApp
             int yRes = Img.YRes;
             int xRes = Img.XRes;
 
-            int[,] outArr = new int[((xRes  - width) / xInc) + 1 , ((yRes - height) / yInc) + 1];
+            Img.FilteredArr = new int[((xRes - width) / xInc) + 1, ((yRes - height) / yInc) + 1];
             int outX = 0;
             int outY = 0;
 
-            for (int maskPosY = 0; maskPosY + height < yRes; maskPosY += yInc)
+            for (int repeat = 0; repeat < repeatNum; repeat++)
             {
-                for (int maskPosX = 0; maskPosX + width < xRes; maskPosX += xInc)
+                for (int maskPosY = 0; maskPosY + height < yRes; maskPosY += yInc)
                 {
-                    int[,] maskArr = Img.Mask(width, height, maskPosX, maskPosY);
+                    for (int maskPosX = 0; maskPosX + width < xRes; maskPosX += xInc)
+                    {
+                        int[,] maskArr = Img.Mask(width, height, maskPosX, maskPosY);
 
-                    outArr[outX, outY] = GetMedian(maskArr);
-                    outX++;
+                        Img.FilteredArr[outX, outY] = GetMedian(maskArr);
+
+                        outX++;
+                    }
+                    outX = 0;
+                    outY++;
                 }
-                outX = 0;
-                outY++;
+                outY = 0;
             }
-            return outArr;
+            return Img.FilteredArr;
         }
 
         public static int GetMedian(int[,] maskArr)
@@ -49,7 +54,7 @@ namespace FilterApp
             return median;
         }
 
-        public static int[,] MultiplyFilter(MyImage Img, MaskGrid maskGrid)
+        public static int[,] MultiplyFilter(Image Img, MaskGrid maskGrid, int repeatNum)
         {
             int xInc = Img.XInc;
             int yInc = Img.YInc;
@@ -57,28 +62,43 @@ namespace FilterApp
             int yRes = Img.YRes;
             int width = Img.MaskWidth;
             int height = Img.MaskHeight;
-            int[,] outArr = new int[xRes, yRes];
-            //int[,] valueArr = new int[width, height];
+            Img.FilteredArr = new int[xRes, yRes];
             int[,] valueArr = maskGrid.GetGridValues(width, height);
-            //int[,] valueArr = { { 0, 0, 0, 0, 0 }, { 0, 1, 1, 1, 1 }, { 0, 1, 3, 5, 7 }, { 0, 1, 5, 7, 9 }, { 0, 1, 7, 9, 9 } };
 
-
-            for (int maskPosY = 0; maskPosY + height < yRes; maskPosY += yInc)
+            for (int repeat = 0; repeat < repeatNum; repeat++)
             {
-                for (int maskPosX = 0; maskPosX + width < xRes; maskPosX += xInc)
+                for (int maskPosY = 0; maskPosY + height < yRes; maskPosY += yInc)
                 {
-                    int[,] maskArr = Img.Mask(width, height, maskPosX, maskPosY);
-                    for (int y = 0; y < height; y++)
+                    for (int maskPosX = 0; maskPosX + width < xRes; maskPosX += xInc)
                     {
-                        for (int x = 0; x < width; x++)
+                        int[,] maskArr = Img.Mask(width, height, maskPosX, maskPosY);
+                        for (int y = 0; y < height; y++)
                         {
-                            maskArr[x, y] = valueArr[x, y] * maskArr[x, y];
+                            for (int x = 0; x < width; x++)
+                            {
+                                maskArr[x, y] = valueArr[x, y] * maskArr[x, y];
+                            }
                         }
+                        Img.FilteredArr[maskPosX + (width / 2) - xInc, maskPosY + (height / 2) - yInc] = GetMedian(maskArr);
                     }
-                    outArr[maskPosX + (width / 2) - xInc, maskPosY + (height / 2) - yInc] = GetMedian(maskArr);
                 }
             }
-            return outArr;
+            return Img.FilteredArr;
+        }
+
+        public static void PowerFilter(Image Img, int power, int repeatNum)
+        {
+            for (int repeat = 0; repeat < repeatNum; repeat++)
+            {
+                for (int y = 0; y < Img.YRes; y++)
+                {
+                    for (int x = 0; x < Img.XRes; x++)
+                    {
+                        Math.Pow(x, power);
+                        Img.FilteredArr[x,y] = (int) Math.Pow(Img.Arr[x,y],power);
+                    }
+                }
+            }
         }
     }
 }
